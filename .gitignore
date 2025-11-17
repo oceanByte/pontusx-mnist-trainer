@@ -1,0 +1,5 @@
+.venv/
+artifacts/
+mnist-dataset/
+*.tar.gz
+__pycache__/
