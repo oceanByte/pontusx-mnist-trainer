@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import random
 from glob import glob
@@ -223,15 +224,27 @@ def main() -> None:
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
+        history = []
         for epoch in range(1, args.epochs + 1):
             loss = train_epoch(model, train_loader, criterion, optimizer, device)
             acc = evaluate(model, test_loader, device)
+            history.append({"epoch": epoch, "train_loss": loss, "test_accuracy": acc})
             print(f"Epoch {epoch}: loss={loss:.4f}, test_acc={acc*100:.2f}%")
 
         args.output_dir.mkdir(parents=True, exist_ok=True)
-        output_path = args.output_dir / "mnist_cnn.pt"
-        torch.save({"model_state_dict": model.state_dict(), "epochs": args.epochs}, output_path)
-        print(f"Model saved to {output_path.resolve()}")
+        model_path = args.output_dir / "mnist_cnn.pt"
+        torch.save({"model_state_dict": model.state_dict(), "epochs": args.epochs}, model_path)
+
+        metrics_path = args.output_dir / "metrics.json"
+        with open(metrics_path, "w", encoding="utf-8") as f:
+            json.dump({"epochs": args.epochs, "history": history}, f, indent=2)
+
+        archive_path = args.output_dir / "mnist_artifacts.tar.gz"
+        with tarfile.open(archive_path, "w:gz") as tar:
+            tar.add(model_path, arcname=model_path.name)
+            tar.add(metrics_path, arcname=metrics_path.name)
+
+        print(f"Artifacts written to {archive_path.resolve()}")
     finally:
         if temp_dir:
             temp_dir.cleanup()
