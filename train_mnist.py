@@ -198,7 +198,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output-dir",
         type=Path,
-        default=Path("/outputs"),
+        default=Path("/data/outputs"),
         help="Directory where model, metrics, and archives will be written",
     )
     return parser.parse_args()
