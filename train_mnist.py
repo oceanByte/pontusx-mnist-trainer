@@ -110,30 +110,36 @@ def extract_archive(archive_path: Path) -> Tuple[Path, tempfile.TemporaryDirecto
     return dest, temp_dir
 
 
-def resolve_data_root(data_dir: Path, data_archive: Optional[Path]) -> Tuple[Path, Optional[tempfile.TemporaryDirectory]]:
+def resolve_data_root(
+    data_dir: Path, data_archive: Optional[Path]
+) -> Tuple[Path, Optional[tempfile.TemporaryDirectory]]:
     if data_archive:
         print(f"Extracting archive {data_archive}")
         return extract_archive(data_archive)
 
     data_dir = data_dir.expanduser().resolve()
-    if data_dir.is_file() and is_supported_archive(data_dir):
-        print(f"Extracting archive {data_dir}")
-        return extract_archive(data_dir)
+    if data_dir.is_file():
+        if is_supported_archive(data_dir):
+            print(f"Extracting archive {data_dir}")
+            return extract_archive(data_dir)
+        raise FileNotFoundError(f"Provided data path {data_dir} is not an archive")
 
     if not data_dir.exists():
         raise FileNotFoundError(f"Data directory {data_dir} does not exist")
 
-    # If the directory already has parquet files we can use it directly.
-    if list(data_dir.rglob("*.parquet")):
-        return data_dir, None
+    parquet_files = list(data_dir.rglob("*.parquet"))
+    if parquet_files:
+        root = Path(os.path.commonpath(parquet_files))
+        return root, None
 
-    # Otherwise, see if the directory contains an archive we can unpack.
-    for candidate in data_dir.iterdir():
-        if is_supported_archive(candidate):
+    for candidate in data_dir.rglob("*"):
+        if candidate.is_file() and is_supported_archive(candidate):
             print(f"Extracting archive {candidate}")
             return extract_archive(candidate)
 
-    raise FileNotFoundError(f"No parquet files or supported archives found under {data_dir}")
+    raise FileNotFoundError(
+        f"No parquet files or supported archives found under {data_dir}"
+    )
 
 
 def get_device() -> torch.device:
