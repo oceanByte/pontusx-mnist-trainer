@@ -201,6 +201,8 @@ def parse_args() -> argparse.Namespace:
         default=Path("/data/outputs"),
         help="Directory where model, metrics, and archives will be written",
     )
+    parser.add_argument("--max-train-samples", type=int, default=None, help="Limit number of training samples for quick tests")
+    parser.add_argument("--max-test-samples", type=int, default=None, help="Limit number of test samples for quick tests")
     return parser.parse_args()
 
 
@@ -210,6 +212,16 @@ def main() -> None:
     data_root, temp_dir = resolve_data_root(args.data_dir, args.data_archive)
     try:
         dataset_dict = load_mnist(data_root)
+
+        if args.max_train_samples:
+            limit = min(args.max_train_samples, len(dataset_dict["train"]))
+            dataset_dict["train"] = dataset_dict["train"].select(range(limit))
+            print(f"Using first {limit} training samples")
+
+        if args.max_test_samples:
+            limit = min(args.max_test_samples, len(dataset_dict["test"]))
+            dataset_dict["test"] = dataset_dict["test"].select(range(limit))
+            print(f"Using first {limit} test samples")
 
         transform = transforms.Compose([
             transforms.ToTensor(),  # converts to [0, 1]
