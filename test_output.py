@@ -10,12 +10,20 @@ from pathlib import Path
 
 
 def main() -> None:
-    output_dir = Path(os.environ.get("OUTPUT_DIR", "/outputs"))
+    output_dir = Path(os.environ.get("OUTPUT_DIR", "/data/outputs"))
     try:
         output_dir.mkdir(parents=True, exist_ok=True)
     except OSError:
-        output_dir = Path("artifacts")
-        output_dir.mkdir(parents=True, exist_ok=True)
+        # Fall back to /outputs or local artifacts if /data/outputs is read-only.
+        for fallback in (Path("/outputs"), Path("artifacts")):
+            try:
+                fallback.mkdir(parents=True, exist_ok=True)
+                output_dir = fallback
+                break
+            except OSError:
+                continue
+        else:
+            raise RuntimeError("Unable to create any writable output directory")
 
     payload = {
         "message": "Pontus-X quick test",
