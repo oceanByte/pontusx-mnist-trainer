@@ -192,8 +192,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output-dir",
         type=Path,
-        default=Path("/data/outputs"),
-        help="Where to store the trained model and metrics",
+        default=Path("/outputs"),
+        help="Directory where model, metrics, and archives will be written",
     )
     return parser.parse_args()
 
