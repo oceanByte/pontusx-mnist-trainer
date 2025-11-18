@@ -189,7 +189,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--epochs", type=int, default=3, help="Number of training epochs")
     parser.add_argument("--batch-size", type=int, default=128, help="Mini-batch size")
     parser.add_argument("--lr", type=float, default=1e-3, help="Adam learning rate")
-    parser.add_argument("--output-dir", type=Path, default=Path("artifacts"), help="Where to store the trained model")
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=Path("/data/outputs"),
+        help="Where to store the trained model and metrics",
+    )
     return parser.parse_args()
 
 
